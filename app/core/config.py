@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str
     ADMIN_PWD: str
 
+    JWT_SECRET: str
+    JWT_ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_DAYS: int
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,

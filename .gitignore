@@ -22,6 +22,7 @@ venv
 
 # Operating System Files
 .DS_Store # macOS
+.DS_Store
 
 # Testing and Coverage
 .pytest_cache/

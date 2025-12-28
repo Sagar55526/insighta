@@ -1,0 +1,43 @@
+# Python
+__pycache__
+*.pyc
+*.pyd
+*.pyo
+.Python
+env
+venv
+/site
+/dist
+/build
+
+# IDE/Editor Specific
+# VS Code
+.vscode/
+
+# PyCharm/IntelliJ
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Operating System Files
+.DS_Store # macOS
+
+# Testing and Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+nosetests.xml
+# For specific testing tools like Playwright
+test-results/
+
+# Environment Variables
+.env
+.flaskenv
+
+# Log and Database Files
+*.log
+*.sqlite
+*.sqlite3
+db.sqlite3

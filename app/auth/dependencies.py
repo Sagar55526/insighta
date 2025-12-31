@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 
 from app.core.config import settings
-from app.models.user import User
+from app.models.user_pg import User
 
 oauth2_scheme = HTTPBearer()
 

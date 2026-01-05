@@ -1,46 +1,48 @@
+from pathlib import Path
 from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph
-from typing import TypedDict, List
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+import json
+
+from app.core.config import settings
 
 
-class SchemaState(TypedDict):
-    columns: List[dict]
-    samples: List[dict]
-    schema: List[dict]
+PROMPT_PATH = Path(__file__).parent / "prompts" / "schema_maker_agent.md"
 
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+class SchemaMakerAgent:
+    def __init__(self):
+        self.llm = ChatOpenAI(
+            model="gpt-4o-mini",
+            temperature=0
+        )
 
+        self.prompt = PromptTemplate(
+            template=PROMPT_PATH.read_text(),
+            input_variables=["schema_payload"]
+        )
 
-def schema_maker_node(state: SchemaState) -> SchemaState:
-    prompt = f"""
-You are a data architect.
+        self.chain = (
+            self.prompt
+            | self.llm
+            | StrOutputParser()
+        )
 
-Given:
-Columns:
-{state['columns']}
+    async def run(self, schema_payload: dict) -> dict:
+        """
+        Runs schema inference agent and returns parsed JSON
+        """
+        response = await self.chain.ainvoke(
+            {
+                "schema_payload": json.dumps(
+                    schema_payload,
+                    indent=2,
+                    default=str
+                )
+            }
+        )
 
-Sample rows:
-{state['samples']}
-
-Return JSON schema:
-[
-  {{
-    "column_name": "",
-    "dtype": "",
-    "description": "",
-    "sample_values": []
-  }}
-]
-"""
-
-    response = llm.invoke(prompt)
-    state["schema"] = response.json()
-    return state
-
-
-graph = StateGraph(SchemaState)
-graph.add_node("schema_maker", schema_maker_node)
-graph.set_entry_point("schema_maker")
-
-schema_graph = graph.compile()
+        try:
+            return json.loads(response)
+        except json.JSONDecodeError:
+            raise ValueError("SchemaMakerAgent returned invalid JSON")

@@ -32,6 +32,7 @@ class SchemaMakerAgent:
         """
         Runs schema inference agent and returns parsed JSON
         """
+        print(f"schema payload is as follows: {schema_payload}")
         response = await self.chain.ainvoke(
             {
                 "schema_payload": json.dumps(

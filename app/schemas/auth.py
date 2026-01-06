@@ -2,8 +2,8 @@ from pydantic import BaseModel, EmailStr
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+    email: EmailStr = 'sagar@example.com'
+    password: str = 'asdasd'
 
 
 class TokenResponse(BaseModel):

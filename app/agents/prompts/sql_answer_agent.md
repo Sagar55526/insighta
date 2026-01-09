@@ -21,7 +21,7 @@ User Question: {user_question}
 
 ### 2. Data Type Awareness
 - **integer/float columns**: Use numeric operations (SUM, AVG, MAX, MIN, COUNT)
-- **string columns**: Use string operations (LIKE, ILIKE, DISTINCT)
+- **string columns**: Use string operations (LIKE, ILIKE, DISTINCT but with proper supporting %% operators as per valid SQL syntax example : ILIKE '%Repairs and Maintenance%')
 - **category columns**: Use DISTINCT, GROUP BY, or IN clauses
 - **date/datetime columns**: Use date functions and comparisons
 

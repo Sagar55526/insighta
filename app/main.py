@@ -4,11 +4,13 @@ from contextlib import asynccontextmanager
 from beanie import init_beanie
 
 from app.db.mongo import connect_mongo, close_mongo, get_mongo_db
-from app.models.user_pg import User
+from app.models.user import User
 from app.models.mapping_mng import DBMapping
+from app.models.chat import Message, Thread
 from app.api.user import router as user_router
 from app.api.auth import router as auth_router
 from app.api.ingestion import router as ingest_router
+from app.api.chat import router as chat_router
 from app.core.config import settings
 
 
@@ -23,7 +25,7 @@ async def lifespan(app: FastAPI):
     db = get_mongo_db()
     await init_beanie(
         database=db,
-        document_models=[User, DBMapping]
+        document_models=[User, DBMapping, Message, Thread]
     )
 
     yield
@@ -43,3 +45,4 @@ app = FastAPI(
 app.include_router(user_router, prefix=settings.API_V1_STR)
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(ingest_router, prefix=settings.API_V1_STR)
+app.include_router(chat_router, prefix=settings.API_V1_STR)

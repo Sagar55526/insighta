@@ -4,7 +4,7 @@ from app.auth.dependencies import get_current_user
 from app.schemas.ingestion import IngestionResponse
 from app.services.ingestion_service import ingest_files
 from app.db.postgres import get_postgres_session
-from app.models.user_pg import User
+from app.models.user import User
 from app.services.schema_extraction_service import extract_schema_payload
 from app.services.schema_maker_service import generate_and_store_schema
 

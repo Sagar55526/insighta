@@ -1,7 +1,7 @@
 from app.models.mapping_mng import DBMapping
 from app.utils.file_parser import parse_file
 from app.db.postgres_utils import store_dataframe
-from app.models.user_pg import User
+from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import UploadFile
 

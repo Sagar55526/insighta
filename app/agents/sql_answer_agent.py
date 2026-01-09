@@ -10,15 +10,22 @@ PROMPT_PATH = Path(__file__).parent / "prompts" / "sql_answer_agent.md"
 
 
 class SQLAnswerAgent:
-    def __init__(self):
+    def __init__(self, bot_message_id: str):
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
-            temperature=0,
+            temperature=0.2,
         )
+        self.bot_message_id = bot_message_id
 
         self.prompt = PromptTemplate(
             template=PROMPT_PATH.read_text(),
-            input_variables=["table_name", "schema", "user_question"],
+            input_variables=[
+                "table_name",
+                "schema",
+                "user_question",
+                "history_context",
+            ]
+
         )
 
         self.chain = self.prompt | self.llm | JsonOutputParser()
@@ -28,6 +35,7 @@ class SQLAnswerAgent:
         table_name: str,
         table_schema: dict,
         user_question: str,
+        history_context: list,
     ) -> dict:
         
         schema_list = table_schema.get("schema", [])
@@ -35,7 +43,8 @@ class SQLAnswerAgent:
         response = await self.chain.ainvoke({
             "table_name": table_name,
             "schema": json.dumps(schema_list, indent=2),
-            "user_question": user_question
+            "user_question": user_question,
+            "history_context": history_context,
         })
 
         validated_response = self._validate_response(response, table_name, schema_list)
@@ -60,7 +69,7 @@ class SQLAnswerAgent:
             for col_name in column_names:
                 if col_name.lower() in sql.lower() and f'"{col_name}"' not in sql:
                     sql = sql.replace(col_name, f'"{col_name}"')
-
+        print(f"GENERATED RESULTS ARE AS FOLLOWS: {sql} AND EXPLAINATION IS {explanation}")
         return {
             "sql": sql,
             "explanation": explanation

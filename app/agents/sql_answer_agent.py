@@ -69,7 +69,6 @@ class SQLAnswerAgent:
             for col_name in column_names:
                 if col_name.lower() in sql.lower() and f'"{col_name}"' not in sql:
                     sql = sql.replace(col_name, f'"{col_name}"')
-        print(f"GENERATED RESULTS ARE AS FOLLOWS: {sql} AND EXPLAINATION IS {explanation}")
         return {
             "sql": sql,
             "explanation": explanation
@@ -191,20 +190,20 @@ if __name__ == "__main__":
 
         test_cases = [
             "What is the total monthly spend?",
-            "How many vendors are there for each risk level?",
-            "What is the average outstanding amount by risk level?",
-            "Which categories are available?",
-            "Show me top 5 vendors with highest outstanding amounts",
-            "What is the total outstanding for high-risk vendors?",
-            "List all vendors in the Purchases category",
-            "What is the average number of days by category?",
-            "Which vendor has the maximum monthly spend?",
-            "How many sites are managed by each risk level?",
-            "What is the total outstanding amount by category?",
-            "Show vendors with outstanding amount greater than 500000",
-            "What is the distribution of vendors across different categories?",
-            "Calculate the average monthly spend for each category",
-            "Which risk level has the highest total outstanding?"
+            # "How many vendors are there for each risk level?",
+            # "What is the average outstanding amount by risk level?",
+            # "Which categories are available?",
+            # "Show me top 5 vendors with highest outstanding amounts",
+            # "What is the total outstanding for high-risk vendors?",
+            # "List all vendors in the Purchases category",
+            # "What is the average number of days by category?",
+            # "Which vendor has the maximum monthly spend?",
+            # "How many sites are managed by each risk level?",
+            # "What is the total outstanding amount by category?",
+            # "Show vendors with outstanding amount greater than 500000",
+            # "What is the distribution of vendors across different categories?",
+            # "Calculate the average monthly spend for each category",
+            # "Which risk level has the highest total outstanding?"
         ]
 
         print(f"\n{'='*80}")

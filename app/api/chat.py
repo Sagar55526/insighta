@@ -7,6 +7,7 @@ from app.schemas.chat import (
     MessageCreate,
     MessageResponse,
 )
+from app.db.postgres import get_postgres_session
 from app.models.chat import Thread
 from app.models.user import User
 from app.auth.dependencies import get_current_user
@@ -26,6 +27,8 @@ from app.services.message_service import (
 )
 from app.utils.unified_memory_manager import UnifiedMemoryManager
 from app.agents.sql_answer_agent import SQLAnswerAgent
+from app.agents.executor_agent import ExecutorAgent
+from app.agents.response_agent import ResponseAgent
 
 router = APIRouter()
 
@@ -52,28 +55,49 @@ async def process_bot_message(
         "random_records": mapping["random_records"],
     }
 
-    orchestrator_agent = SQLAnswerAgent(bot_message_id=bot_message_id)
-
-    response = await orchestrator_agent.run(
+    sql_agent = SQLAnswerAgent(bot_message_id=bot_message_id)
+    sql_response = await sql_agent.run(
         table_name=table_name,
         table_schema=table_schema,
         user_question=message_in.content,
         history_context=history_context,
     )
 
-    await update_message_content(
-        bot_message_id,
-        response["explanation"]
+    sql = sql_response.get("sql")
+    explanation = sql_response.get("explanation", "")
+
+    if not sql:
+        await update_message_content(
+            bot_message_id,
+            explanation or "I couldn’t answer this question with the available data."
+        )
+        memory_manager.update_memory(
+            user_query=message_in.content,
+            ai_response=explanation,
+        )
+        return
+
+    executor = ExecutorAgent()
+    async for session in get_postgres_session():
+        execution_result = await executor.run(
+            sql=sql,
+            session=session
+        )
+
+    response_agent = ResponseAgent()
+    response = await response_agent.run(
+        sql_query=sql,
+        user_question=message_in.content,
+        execution_result=execution_result,
     )
 
-    if response.get("graphs"):
-        await update_message_graphs(bot_message_id, response["graphs"])
+    await update_message_content(bot_message_id, response)
 
     memory_manager.update_memory(
         user_query=message_in.content,
-        ai_response=response["explanation"],
+        ai_response=response,
     )
-    
+
 
 @router.post(
     "/threads", response_model=ThreadResponse, status_code=status.HTTP_201_CREATED

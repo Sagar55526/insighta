@@ -13,7 +13,6 @@ async def get_table_mapping(user_id: str, db_id: str):
     mapping = await DBMapping.find_one(
         DBMapping.user_id == user_id,
         DBMapping.db_id == db_id,
-        DBMapping.schema_status == "COMPLETED",
     )
 
     if not mapping:

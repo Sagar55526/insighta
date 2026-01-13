@@ -14,6 +14,7 @@ class SQLAnswerAgent:
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
             temperature=0.2,
+            verbose=True,
         )
         self.bot_message_id = bot_message_id
 

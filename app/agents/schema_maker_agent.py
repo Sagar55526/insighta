@@ -15,7 +15,8 @@ class SchemaMakerAgent:
     def __init__(self):
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
-            temperature=0
+            temperature=0.2,
+            verbose=True,
         )
 
         self.prompt = PromptTemplate(

@@ -81,7 +81,8 @@ async def process_bot_message(
     async for session in get_postgres_session():
         execution_result = await executor.run(
             sql=sql,
-            session=session
+            session=session,
+            table_schema=table_schema,
         )
 
     response_agent = ResponseAgent()

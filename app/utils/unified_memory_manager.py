@@ -28,6 +28,7 @@ class UnifiedMemoryManager:
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
             temperature=0.2,
+            verbose=True,
         )
 
     def get_full_history(self):

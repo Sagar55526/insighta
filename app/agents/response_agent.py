@@ -13,7 +13,8 @@ class ResponseAgent:
     def __init__(self):
         self.llm = ChatOpenAI(
             model="gpt-4o-mini",
-            temperature=0.3  # Slightly higher for more natural responses
+            temperature=0.2,
+            verbose=True,
         )
 
         self.prompt = PromptTemplate(

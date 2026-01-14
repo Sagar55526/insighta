@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 
-from app.models.user_pg import User
+from app.models.user import User
 from app.schemas.auth import LoginRequest
 from app.auth.security import verify_password, create_access_token
 

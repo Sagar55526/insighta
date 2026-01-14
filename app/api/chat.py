@@ -46,7 +46,6 @@ async def process_bot_message(
         message_in.content
     )
 
-    # ✅ Fetch table name + schema
     mapping = await get_table_mapping(user_id=user_id, db_id=db_id)
 
     table_name = mapping["table_name"]
@@ -69,18 +68,16 @@ async def process_bot_message(
     if not sql:
         await update_message_content(
             bot_message_id,
-            explanation or "I couldn’t answer this question with the available data."
-        )
-        memory_manager.update_memory(
-            user_query=message_in.content,
-            ai_response=explanation,
+            explanation or "I couldn't answer this question with the available data."
         )
         return
 
-    executor = ExecutorAgent()
+    executor = ExecutorAgent(max_rows=1000, max_retries=2)
+    
     async for session in get_postgres_session():
         execution_result = await executor.run(
             sql=sql,
+            explanation=explanation,
             session=session,
             table_schema=table_schema,
         )

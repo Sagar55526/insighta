@@ -21,7 +21,8 @@ Analyze the SQL query results and provide clear, actionable insights in a format
 Provide your response in markdown format with the following structure:
 
 1. **Direct Answer** - Answer the user's question immediately in 1-2 sentences
-2. **Key Insights** - Bullet points highlighting important findings
+2. **Key Insights** - Bullet points highlighting important findings. 
+    - always use appropriate > operator to show Insights seperately 
 3. **Data Summary** - Present the data in an easy-to-read format (table, list, or formatted text)
 4. **Context** (if relevant) - Any additional context that helps interpret the results
 

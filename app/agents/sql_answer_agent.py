@@ -70,12 +70,12 @@ class SQLAnswerAgent:
             for col_name in column_names:
                 if col_name.lower() in sql.lower() and f'"{col_name}"' not in sql:
                     sql = sql.replace(col_name, f'"{col_name}"')
+        print(f"GENERATED SQL IS AS FOLLOWS: {sql} and IT'S EXPLAINATION IS AS FOLLOWS: {explanation}")
         return {
             "sql": sql,
             "explanation": explanation
         }
     
-# app/agents/sql_answer_agent.py (test section)
 
 if __name__ == "__main__":
     import asyncio

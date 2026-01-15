@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
 
 from beanie import init_beanie
 
@@ -13,6 +15,7 @@ from app.api.auth import router as auth_router
 from app.api.ingestion import router as ingest_router
 from app.api.chat import router as chat_router
 from app.core.config import settings
+from app.services.ws_service import manager
 
 
 @asynccontextmanager
@@ -49,8 +52,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🔹 Include Routers
 app.include_router(user_router, prefix=settings.API_V1_STR)
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(ingest_router, prefix=settings.API_V1_STR)
 app.include_router(chat_router, prefix=settings.API_V1_STR)
+
+@app.websocket("/ws/messages/{message_id}")
+async def websocket_endpoint(websocket: WebSocket, message_id: str):
+    await manager.connect(message_id, websocket)
+
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(message_id)
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=settings.PORT
+    )

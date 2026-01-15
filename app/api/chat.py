@@ -29,6 +29,7 @@ from app.utils.unified_memory_manager import UnifiedMemoryManager
 from app.agents.sql_answer_agent import SQLAnswerAgent
 from app.agents.executor_agent import ExecutorAgent
 from app.agents.response_agent import ResponseAgent
+from app.services.ws_service import manager
 
 router = APIRouter()
 
@@ -40,6 +41,14 @@ async def process_bot_message(
     bot_message_id: str,
     db_id: str,
 ):
+
+    await manager.send_message(bot_message_id, {
+        "type": "status",
+        "stage": "thinking",
+        "content": "Understanding your question…"
+    })
+
+
     memory_manager = UnifiedMemoryManager(thread_id=thread_id)
 
     history_context = await memory_manager.get_history_context(
@@ -55,6 +64,11 @@ async def process_bot_message(
     }
 
     sql_agent = SQLAnswerAgent(bot_message_id=bot_message_id)
+    await manager.send_message(bot_message_id, {
+        "type": "status",
+        "stage": "sql",
+        "content": "Generating query…"
+    })
     sql_response = await sql_agent.run(
         table_name=table_name,
         table_schema=table_schema,
@@ -74,6 +88,11 @@ async def process_bot_message(
 
     executor = ExecutorAgent(max_rows=1000, max_retries=2)
     
+    await manager.send_message(bot_message_id, {
+        "type": "status",
+        "stage": "execution",
+        "content": "Running query…"
+    })
     async for session in get_postgres_session():
         execution_result = await executor.run(
             sql=sql,
@@ -82,12 +101,18 @@ async def process_bot_message(
             table_schema=table_schema,
         )
 
+
     response_agent = ResponseAgent()
     response = await response_agent.run(
         sql_query=sql,
         user_question=message_in.content,
         execution_result=execution_result,
     )
+
+    await manager.send_message(bot_message_id, {
+        "type": "message",
+        "full_respoinse": response
+    })
 
     await update_message_content(bot_message_id, response)
 

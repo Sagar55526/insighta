@@ -15,7 +15,7 @@ async def generate_and_store_schema(
     mapping.schema = inferred_schema.get("schema", [])
     mapping.random_records = inferred_schema.get("random_records", [])
     mapping.schema_status = "COMPLETED"
-    mapping.schema_created_at = datetime.utcnow()
+    mapping.created_at = datetime.utcnow()
 
     await mapping.save()
 

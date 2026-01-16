@@ -29,7 +29,7 @@ from app.utils.unified_memory_manager import UnifiedMemoryManager
 from app.agents.sql_answer_agent import SQLAnswerAgent
 from app.agents.executor_agent import ExecutorAgent
 from app.agents.response_agent import ResponseAgent
-from app.services.ws_service import manager
+from app.services.redis_service import publish_event
 
 router = APIRouter()
 
@@ -41,13 +41,15 @@ async def process_bot_message(
     bot_message_id: str,
     db_id: str,
 ):
-
-    await manager.send_message(bot_message_id, {
-        "type": "status",
-        "stage": "thinking",
-        "content": "Understanding your question…"
-    })
-
+    await publish_event(
+        thread_id=thread_id,
+        bot_message_id=bot_message_id,
+        event={
+            "type": "status",
+            "stage": "thinking",
+            "content": "Understanding your question…",
+        },
+    )
 
     memory_manager = UnifiedMemoryManager(thread_id=thread_id)
 
@@ -55,7 +57,10 @@ async def process_bot_message(
         message_in.content
     )
 
-    mapping = await get_table_mapping(user_id=user_id, db_id=db_id)
+    mapping = await get_table_mapping(
+        user_id=user_id,
+        db_id=db_id,
+    )
 
     table_name = mapping["table_name"]
     table_schema = {
@@ -64,11 +69,17 @@ async def process_bot_message(
     }
 
     sql_agent = SQLAnswerAgent(bot_message_id=bot_message_id)
-    await manager.send_message(bot_message_id, {
-        "type": "status",
-        "stage": "sql",
-        "content": "Generating query…"
-    })
+
+    await publish_event(
+        thread_id=thread_id,
+        bot_message_id=bot_message_id,
+        event={
+            "type": "status",
+            "stage": "sql",
+            "content": "Generating query…",
+        },
+    )
+
     sql_response = await sql_agent.run(
         table_name=table_name,
         table_schema=table_schema,
@@ -80,19 +91,32 @@ async def process_bot_message(
     explanation = sql_response.get("explanation", "")
 
     if not sql:
-        await update_message_content(
-            bot_message_id,
-            explanation or "I couldn't answer this question with the available data."
+        await publish_event(
+            thread_id=thread_id,
+            bot_message_id=bot_message_id,
+            event={
+                "type": "message",
+                "content": explanation
+                or "I couldn’t answer this question with the available data.",
+            },
         )
         return
 
-    executor = ExecutorAgent(max_rows=1000, max_retries=5)
-    
-    await manager.send_message(bot_message_id, {
-        "type": "status",
-        "stage": "execution",
-        "content": "Running query…"
-    })
+    executor = ExecutorAgent(
+        max_rows=1000,
+        max_retries=5,
+    )
+
+    await publish_event(
+        thread_id=thread_id,
+        bot_message_id=bot_message_id,
+        event={
+            "type": "status",
+            "stage": "execution",
+            "content": "Running query…",
+        },
+    )
+
     async for session in get_postgres_session():
         execution_result = await executor.run(
             sql=sql,
@@ -106,20 +130,30 @@ async def process_bot_message(
     response = await response_agent.run(
         sql_query=sql,
         user_question=message_in.content,
-        execution_result=execution_result,
+        execution_result=execution_result
     )
 
-    await manager.send_message(bot_message_id, {
-        "type": "message",
-        "full_respoinse": response
-    })
+    print(f"RESPONSE FROM RESPONSE AGENT IS AS FOLLOWS: {response}")
 
-    await update_message_content(bot_message_id, response)
+    await publish_event(
+        thread_id=thread_id,
+        bot_message_id=bot_message_id,
+        event={
+            "type": "message",
+            "content": response,
+        },
+    )
+    print(f"THIS IS BEFORE UPDATE MONGO'S BOT MESSAGE BACK")
+    await update_message_content(
+        bot_message_id,
+        response,
+    )
 
     memory_manager.update_memory(
         user_query=message_in.content,
         ai_response=response,
     )
+
 
 
 @router.post(

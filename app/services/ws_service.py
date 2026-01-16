@@ -5,15 +5,15 @@ class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
 
-    async def connect(self, message_id: str, websocket: WebSocket):
+    async def connect(self, thread_id: str, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections[message_id] = websocket
+        self.active_connections[thread_id] = websocket
     
-    def disconnect(self, message_id: str):
-        self.active_connections.pop(message_id, None)
+    def disconnect(self, thread_id: str):
+        self.active_connections.pop(thread_id, None)
     
-    async def send_message(self, message_id: str, message: dict):
-        websocket = self.active_connections.get(message_id)
+    async def send_message(self, thread_id: str, message: dict):
+        websocket = self.active_connections.get(thread_id)
         if websocket:
             await websocket.send_json(message)
 

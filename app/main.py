@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import asyncio
 
 
 from beanie import init_beanie
@@ -16,6 +17,7 @@ from app.api.ingestion import router as ingest_router
 from app.api.chat import router as chat_router
 from app.core.config import settings
 from app.services.ws_service import manager
+from app.services.redis_service import redis_event_listener
 
 
 @asynccontextmanager
@@ -31,10 +33,19 @@ async def lifespan(app: FastAPI):
         database=db,
         document_models=[User, DBMapping, Message, Thread]
     )
+    # Redis listner start listning here
+    redis_task = asyncio.create_task(redis_event_listener())
+    print("🚀 Redis Listener running")
 
     yield
 
     # App Shutdown
+    print("🔻 Shutting down Redis listener")
+    redis_task.cancel()
+    try:
+        await redis_task
+    except asyncio.CancelledError:
+        print("🛑 Redis listener cancelled")
     await close_mongo()
     print("🛑 App shutdown completed")
 
@@ -57,15 +68,15 @@ app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(ingest_router, prefix=settings.API_V1_STR)
 app.include_router(chat_router, prefix=settings.API_V1_STR)
 
-@app.websocket("/ws/messages/{message_id}")
-async def websocket_endpoint(websocket: WebSocket, message_id: str):
-    await manager.connect(message_id, websocket)
+@app.websocket("/ws/messages/{thread_id}")
+async def websocket_endpoint(websocket: WebSocket, thread_id: str):
+    await manager.connect(thread_id, websocket)
 
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(message_id)
+        manager.disconnect(thread_id)
 
 if __name__ == "__main__":
     uvicorn.run(

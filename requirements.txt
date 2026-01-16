@@ -42,3 +42,5 @@ greenlet==3.3.0
 langchain==1.2.0
 langchain-openai
 websockets==16.0
+asyncio==4.0.0 
+redis==7.1.0

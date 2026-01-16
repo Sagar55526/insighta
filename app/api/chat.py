@@ -86,7 +86,7 @@ async def process_bot_message(
         )
         return
 
-    executor = ExecutorAgent(max_rows=1000, max_retries=2)
+    executor = ExecutorAgent(max_rows=1000, max_retries=5)
     
     await manager.send_message(bot_message_id, {
         "type": "status",

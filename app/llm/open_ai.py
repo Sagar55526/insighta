@@ -18,7 +18,7 @@ class LLMProvider:
         self,
         model_name: Optional[str] = None,
         in_json: bool = False,
-        temperature=0.7,
+        temperature=0.3,
         streaming=False,
     ):
         """

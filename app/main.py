@@ -54,3 +54,21 @@ app.include_router(user_router, prefix=settings.API_V1_STR)
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(ingest_router, prefix=settings.API_V1_STR)
 app.include_router(chat_router, prefix=settings.API_V1_STR)
+
+@app.websocket("/ws/messages/{thread_id}")
+async def websocket_endpoint(websocket: WebSocket, thread_id: str):
+    await manager.connect(thread_id, websocket)
+
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(thread_id)
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=settings.PORT,
+        workers=5,
+    )

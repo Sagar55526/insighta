@@ -83,17 +83,50 @@ async def process_bot_message(
         )
 
     response_agent = ResponseAgent()
-    response = await response_agent.run(
+    full_response = ""
+
+    await publish_event(
+        thread_id=thread_id,
+        bot_message_id=bot_message_id,
+        event={
+            "type": "message_start",
+            "content": "",
+        }
+    )
+
+    async for token in response_agent.stream(
         sql_query=sql,
         user_question=message_in.content,
         execution_result=execution_result,
+    ):
+        full_response += token
+
+        await publish_event(
+            thread_id=thread_id,
+            bot_message_id=bot_message_id,
+            event ={
+                "type": "message_start",
+                "content": token,
+            }
+        )
+    
+    await publish_event(
+        thread_id=thread_id,
+        bot_message_id=bot_message_id,
+        event={
+            "type": "message_end",
+            "content": full_response,
+        }
     )
 
-    await update_message_content(bot_message_id, response)
+    await update_message_content(
+        bot_message_id,
+        full_response,
+    )
 
     memory_manager.update_memory(
         user_query=message_in.content,
-        ai_response=response,
+        ai_response=full_response,
     )
 
 

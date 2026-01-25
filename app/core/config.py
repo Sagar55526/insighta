@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str
     ADMIN_PWD: str
 
+    REDIS_HOST: str
+    REDIS_PORT: str
+    REDIS_CHANNEL: str
+
     JWT_SECRET: str
     JWT_ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_DAYS: int

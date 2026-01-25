@@ -45,3 +45,4 @@ websockets==16.0
 asyncio==4.0.0 
 redis==7.1.0
 python-multipart
+langchain-community

@@ -40,4 +40,7 @@ email_validator==2.3.0
 argon2_cffi_bindings==25.1.0
 greenlet==3.3.0
 langchain==1.2.0
-langchain-openai==
+langchain-openai
+websockets==16.0
+asyncio==4.0.0 
+redis==7.1.0

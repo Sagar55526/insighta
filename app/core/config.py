@@ -32,6 +32,10 @@ class Settings(BaseSettings):
 
     OPENAI_API_KEY: str
 
+    REDIS_HOST: str
+    REDIS_PORT: str
+    REDIS_CHANNEL: str
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,

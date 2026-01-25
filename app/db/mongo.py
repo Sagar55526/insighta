@@ -7,8 +7,17 @@ class MongoDB:
 mongo_db = MongoDB()
 
 async def connect_mongo():
-    mongo_db.client = AsyncIOMotorClient(settings.MONGO_URI)
-    print("MONGODB CONNECTED SUCCESSFULLY!!!")
+    mongo_db.client = AsyncIOMotorClient(
+        settings.MONGO_URI,
+        serverSelectionTimeoutMS=30000,
+        tls=True
+    )
+
+    # Force a real connection test
+    await mongo_db.client.admin.command("ping")
+
+    print("✅ MONGODB CONNECTED SUCCESSFULLY!!!")
+
 
 async def close_mongo():
     mongo_db.client.close()

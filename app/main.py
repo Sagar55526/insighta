@@ -78,10 +78,14 @@ async def websocket_endpoint(websocket: WebSocket, thread_id: str):
     except WebSocketDisconnect:
         manager.disconnect(thread_id)
 
-if __name__ == "__main__":
-    uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=settings.PORT,
-        workers=5,
-    )
+@app.get("/")
+def health():
+    return {"status": "ok"}
+
+# if __name__ == "__main__":
+#     uvicorn.run(
+#         "app.main:app",
+#         host="0.0.0.0",
+#         port=settings.PORT,
+#         workers=5,
+#     )

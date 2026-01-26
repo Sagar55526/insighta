@@ -18,7 +18,13 @@ from app.api.chat import router as chat_router
 from app.core.config import settings
 from app.services.ws_service import manager
 from app.services.redis_service import redis_event_listener
+from motor.motor_asyncio import AsyncIOMotorClient
 
+class MongoDB:
+    client: AsyncIOMotorClient = None
+
+
+mongo_db = MongoDB()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -81,6 +87,12 @@ async def websocket_endpoint(websocket: WebSocket, thread_id: str):
 @app.get("/")
 def health():
     return {"status": "ok"}
+
+@app.get("/mongo-test")
+async def mongo_test():
+    await mongo_db.client.admin.command("ping")
+    return {"mongo": "ok"}
+
 
 # if __name__ == "__main__":
 #     uvicorn.run(

@@ -1,5 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.core.config import settings
+import certifi
 
 class MongoDB:
     client: AsyncIOMotorClient = None
@@ -10,17 +11,19 @@ async def connect_mongo():
     mongo_db.client = AsyncIOMotorClient(
         settings.MONGO_URI,
         serverSelectionTimeoutMS=30000,
+        tls=True,
+        tlsCAFile=certifi.where()
     )
 
-    # Force a real connection test
+    # Force real connection
     await mongo_db.client.admin.command("ping")
 
     print("✅ MONGODB CONNECTED SUCCESSFULLY!!!")
-
-
+    
 async def close_mongo():
-    mongo_db.client.close()
-    print("MONGODB CONNECTION CLOSED SUCCESSFULLY!!!")
+    if mongo_db.client:
+        mongo_db.client.close()
+        print("MONGODB CONNECTION CLOSED SUCCESSFULLY!!!")
 
 def get_mongo_db():
     if mongo_db.client is None:

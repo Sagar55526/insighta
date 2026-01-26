@@ -38,3 +38,4 @@ langchain-community
 motor==3.3.2
 pymongo==4.6.1
 beanie==1.25.0
+certifi==2024.2.2

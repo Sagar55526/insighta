@@ -15,7 +15,7 @@ It allows business owners to upload CSV or Excel files and instantly analyze the
 
 ---
 
-## System Architecture
+## System Flow
 
 ![Insighta Architecture](docs/images/insighta-architecture.png)
 

@@ -23,6 +23,7 @@ from app.services.message_service import (
     update_message_content,
     update_message_graphs,
     get_table_mapping,
+    get_all_table_mappings,
     get_db_id,
 )
 from app.utils.unified_memory_manager import UnifiedMemoryManager
@@ -39,7 +40,6 @@ async def process_bot_message(
     thread_id: str,
     user_id: str,
     bot_message_id: str,
-    db_id: str,
 ):
     await publish_event(
         thread_id=thread_id,
@@ -57,16 +57,10 @@ async def process_bot_message(
         message_in.content
     )
 
-    mapping = await get_table_mapping(
+    # Fetch all table mappings for the user to support JOINs
+    tables = await get_all_table_mappings(
         user_id=user_id,
-        db_id=db_id,
     )
-
-    table_name = mapping["table_name"]
-    table_schema = {
-        "schema": mapping["schema"],
-        "random_records": mapping["random_records"],
-    }
 
     sql_agent = SQLAnswerAgent(bot_message_id=bot_message_id)
 
@@ -81,8 +75,7 @@ async def process_bot_message(
     )
 
     sql_response = await sql_agent.run(
-        table_name=table_name,
-        table_schema=table_schema,
+        tables=tables,
         user_question=message_in.content,
         history_context=history_context,
     )
@@ -122,7 +115,7 @@ async def process_bot_message(
             sql=sql,
             explanation=explanation,
             session=session,
-            table_schema=table_schema,
+            tables=tables,
         )
 
 
@@ -233,7 +226,6 @@ async def create_new_message(
         thread_id,
         current_user.id,
         str(bot_msg.id),
-        db_id
     )
 
     return [

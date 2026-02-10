@@ -16,10 +16,12 @@ class ColumnSchema(BaseModel):
 
 
 class SchemaViewResponse(BaseModel):
+    db_id: str
     file_name: str
     schema_status: str
     schema: List[ColumnSchema]
 
 
 class SchemaUpdateRequest(BaseModel):
+    db_id: str
     schema: List[ColumnSchema]

@@ -27,6 +27,18 @@ async def get_schema_for_user(
     return mapping
 
 
+async def get_all_schemas_for_user(
+    user_id: str,
+) -> list[DBMapping]:
+    mappings = await DBMapping.find(
+        DBMapping.user_id == user_id,
+    ).to_list()
+
+    valid_mappings = [m for m in mappings if m.schema]
+    
+    return valid_mappings
+
+
 async def update_schema_descriptions(
     user_id: str,
     db_id: str,

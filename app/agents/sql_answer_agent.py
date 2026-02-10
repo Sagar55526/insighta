@@ -5,6 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 import re
+from typing import List, Dict, Any
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "sql_answer_agent.md"
 
@@ -21,38 +22,43 @@ class SQLAnswerAgent:
         self.prompt = PromptTemplate(
             template=PROMPT_PATH.read_text(),
             input_variables=[
-                "table_name",
-                "schema",
+                "tables_context",
                 "user_question",
                 "history_context",
             ]
-
         )
 
         self.chain = self.prompt | self.llm | JsonOutputParser()
 
     async def run(
         self,
-        table_name: str,
-        table_schema: dict,
+        tables: List[Dict[str, Any]],
         user_question: str,
         history_context: list,
     ) -> dict:
         
-        schema_list = table_schema.get("schema", [])
+        tables_context = []
+        all_table_names = []
+        for table in tables:
+            table_name = table["table_name"]
+            all_table_names.append(table_name)
+            schema_list = table.get("schema", [])
+            tables_context.append({
+                "table_name": table_name,
+                "schema": schema_list
+            })
         
         response = await self.chain.ainvoke({
-            "table_name": table_name,
-            "schema": json.dumps(schema_list, indent=2),
+            "tables_context": json.dumps(tables_context, indent=2),
             "user_question": user_question,
             "history_context": history_context,
         })
 
-        validated_response = self._validate_response(response, table_name, schema_list)
+        validated_response = self._validate_response(response, all_table_names, tables)
         
         return validated_response
 
-    def _validate_response(self, response: dict, table_name: str, schema: list) -> dict:
+    def _validate_response(self, response: dict, all_table_names: List[str], tables: List[Dict[str, Any]]) -> dict:
         if not isinstance(response, dict):
             response_str = str(response)
             response_str = re.sub(r'^```json\s*', '', response_str)
@@ -63,13 +69,20 @@ class SQLAnswerAgent:
         explanation = response.get("explanation", "")
 
         if sql:
-            if table_name not in sql:
-                raise ValueError(f"Generated SQL does not use the correct table name: {table_name}")
+            # Check if at least one valid table name is present in the SQL
+            if not any(table_name in sql for table_name in all_table_names):
+                raise ValueError(f"Generated SQL does not use any of the correct table names: {all_table_names}")
 
-            column_names = [col["column_name"] for col in schema]
-            for col_name in column_names:
-                if col_name.lower() in sql.lower() and f'"{col_name}"' not in sql:
-                    sql = sql.replace(col_name, f'"{col_name}"')
+            for table in tables:
+                schema = table.get("schema", [])
+                column_names = [col["column_name"] for col in schema]
+                for col_name in column_names:
+                    # Simple regex-based replacement to wrap column names in double quotes if they contain spaces or are mixed case
+                    # This is a bit naive but follows existing pattern
+                    if col_name.lower() in sql.lower() and f'"{col_name}"' not in sql:
+                        # Only replace if it's a whole word to avoid partial matches
+                        sql = re.sub(rf'\b{re.escape(col_name)}\b', f'"{col_name}"', sql, flags=re.IGNORECASE)
+        
         print(f"GENERATED SQL IS AS FOLLOWS: {sql} and IT'S EXPLAINATION IS AS FOLLOWS: {explanation}")
         return {
             "sql": sql,

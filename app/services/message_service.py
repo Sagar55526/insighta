@@ -27,6 +27,28 @@ async def get_table_mapping(user_id: str, db_id: str):
     }
 
 
+async def get_all_table_mappings(user_id: str):
+    user_id = str(user_id)
+
+    mappings = await DBMapping.find(
+        DBMapping.user_id == user_id,
+    ).to_list()
+
+    if not mappings:
+        raise ValueError(
+            f"No completed schemas found for user_id={user_id}"
+        )
+
+    return [
+        {
+            "table_name": mapping.table_name,
+            "schema": mapping.schema,
+            "random_records": mapping.random_records,
+        }
+        for mapping in mappings
+    ]
+
+
 
 async def create_message(content: str, user_id: str, thread_id: str) -> Message:
     """

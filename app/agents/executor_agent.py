@@ -48,13 +48,13 @@ class ExecutorAgent:
         self,
         sql: str,
         explanation: str,
-        table_schema: dict
+        tables_context: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         
         prompt = self.validator_template.format(
             sql=sql,
             explanation=explanation,
-            table_schema=json.dumps(table_schema, indent=2)
+            table_schema=json.dumps(tables_context, indent=2)
         )
         
         response = await self.llm.ainvoke(prompt)
@@ -81,13 +81,13 @@ class ExecutorAgent:
         self,
         sql: str,
         error: str,
-        table_schema: dict
+        tables_context: List[Dict[str, Any]]
     ) -> str:
         
         prompt = self.fixer_template.format(
             sql=sql,
             error=error,
-            table_schema=json.dumps(table_schema, indent=2)
+            table_schema=json.dumps(tables_context, indent=2)
         )
         
         response = await self.llm.ainvoke(prompt)
@@ -103,7 +103,7 @@ class ExecutorAgent:
         self,
         sql: str,
         session: AsyncSession,
-        table_schema: dict,
+        tables_context: List[Dict[str, Any]],
         query_index: int = 0
     ) -> Dict[str, Any]:
         
@@ -124,7 +124,7 @@ class ExecutorAgent:
                 current_sql = await self._fix_query_syntax(
                     current_sql,
                     result["error"],
-                    table_schema
+                    tables_context
                 )
                 print(f"[ExecutorAgent] Fixed query: {current_sql}")
             else:
@@ -138,7 +138,7 @@ class ExecutorAgent:
         sql: str,
         explanation: str,
         session: AsyncSession,
-        table_schema: dict,
+        tables: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         
         print(f"\n{'='*80}")
@@ -148,7 +148,7 @@ class ExecutorAgent:
         print(f"{'='*80}\n")
         
         validation_result = await self._validate_and_split_queries(
-            sql, explanation, table_schema
+            sql, explanation, tables
         )
         
         queries = validation_result.get("queries", [])
@@ -180,7 +180,7 @@ class ExecutorAgent:
             result = await self._execute_with_retry(
                 query,
                 session,
-                table_schema,
+                tables,
                 query_index=idx
             )
             

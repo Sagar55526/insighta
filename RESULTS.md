@@ -147,7 +147,3 @@ SELECT "Risk_Level", SUM("Outstanding"::INTEGER) as total_outstanding FROM tbl_6
 
 📝 Explanation:
 This query groups the records by Risk Level and sums the Outstanding amounts for each risk category, then orders the results in descending order to retrieve the risk level with the highest total outstanding.
-
-================================================================================
-Testing Complete
-================================================================================

@@ -33,10 +33,12 @@ Chat History:
 - **date/datetime columns**: Use date functions and comparisons
 
 ### 3. Query Ambiguity and High-Level Requests
-- **Direct Requests**: If the question is specific (e.g., "Total sales", "List of customers"), generate the SQL.
-- **Ambiguous/High-Level Requests**: If the question is vague or requires complex analysis without specific metrics (e.g., "analyze sales", "compare regions", "find trends"), DO NOT generate SQL.
-- **Action**: Set `"sql": null` and use the `"explanation"` to ask for specific clarification.
-- **Wait**: Do not guess complex groupings or filters for "analyze" or "trends" unless the user specifies "by month", "by category", etc.
+- **Direct Requests**: If the question is specific (e.g., "Total sales"), generate the SQL.
+- **Analytical/High-Level Requests**: If the user asks for "analysis", "trends", "overview", or "comparison", generate a holistic query.
+- **Strategy/Abstract Questions**: If the user asks for "strategies", "how to increase X", or "how to improve Y", DO NOT return `null`. Instead, **PIVOT** to the available data to provide a baseline analysis.
+    - *Example*: If asked "How to increase spending?", pivot to "Who are the current top spenders?" or "What categories are most popular?".
+    - *Action*: Generate a query that segments customers or identifies high-value patterns to inform the requested strategy.
+- **Action**: Do NOT return `null` for high-level or strategic requests. Identify the core metrics relevant to the data and generate a summary query.
 
 ### 4. Query Type Detection
 Detect the user's intent and generate appropriate queries:
